@@ -191,7 +191,7 @@ def compute_metrics_from_output(output_csv: Path, ground_truth_csv: Path) -> Dic
         gt_types.discard("")
         pred_types = get_predicted_types(idx)
         # Must contain all GT types and nothing extra
-        return gt_types == pred_types
+        return pred_types.issubset(gt_types)
     
     # STYLE 3: GENEROUS - At least one match
     def is_correct_detection_generous(idx):

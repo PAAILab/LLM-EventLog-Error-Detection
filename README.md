@@ -19,7 +19,6 @@ A Python tool for automated error detection in event log datasets using GPT mode
 ├── script/                  # Generated detection scripts
 ├── detected_output/         # Detection results (CSV files)
 ├── results/                 # JSON summaries with metrics
-├── workflow/                # Breakdown of code with separate functionality
 └── main.py                  # Main script
 ```
 
@@ -43,25 +42,24 @@ export OPENAI_API_KEY='your-api-key-here'
 python main.py
 ```
 
-### With Options
+### With Environment Variables
 
 ```bash
-python main.py \
-    --prompt-file prompt/custom_prompt.txt \
-    --temperature 0.5 \
-    --model gpt-5.2 \
-    --data-dir data/
+export OPENAI_MODEL=gpt-4-turbo
+export OPENAI_API_KEY='your-api-key-here'
+python main.py
 ```
 
-### Command-Line Arguments
+### Configuration Options
 
-| Argument        | Default                       | Description                          |
-| --------------- | ----------------------------- | ------------------------------------ |
-| `--prompt-file` | `prompt/vanilla_examples.txt` | Path to prompt file                  |
-| `--temperature` | `0.3`                         | Temperature for generation (0.0-1.0) |
-| `--model`       | `gpt-5.2`                     | GPT model to use                     |
-| `--data-dir`    | `data`                        | Directory containing datasets        |
-| `--api-key`     | (env var)                     | OpenAI API key                       |
+The script uses environment variables for configuration:
+
+| Environment Variable | Default    | Description      |
+| -------------------- | ---------- | ---------------- |
+| `OPENAI_API_KEY`     | (required) | OpenAI API key   |
+| `OPENAI_MODEL`       | `gpt-5.2`  | GPT model to use |
+
+**Note:** The script automatically uses the prompt file at `prompt/vanilla_examples_instructions.txt` if it exists, otherwise falls back to a built-in default prompt.
 
 ## Input Format
 
@@ -85,7 +83,7 @@ case_id,activity,timestamp,resource,error_type
 **Required columns for evaluation**:
 
 - Event log data: `case_id`, `activity`, `timestamp`, `resource` (or similar)
-- **Ground truth error types**: Column named `error_type`, `error_types`, `gt_error_type`, or `label`
+- **Ground truth error types**: Column named `error_type`, `error_types`, `gt_error_type`, `label`, or `is_error`
   - Empty or blank = no error (clean event)
   - Contains error type(s) = error present (e.g., "form-based", "polluted", "form-based|polluted")
   - Multiple types should be pipe-separated: `form-based|polluted`
@@ -140,6 +138,7 @@ polluted
 - `{dataset_name}_label.csv`
 - `{dataset_name}_gt.csv`
 - `{dataset_name}_groundtruth.csv`
+- `{dataset_name}_withLabel.csv` (if data file is `{dataset_name}_noLabel.csv`)
 
 **Example**: If your data file is `credit_data.csv`, the labels file should be `credit_data_labels.csv`
 
@@ -147,7 +146,7 @@ polluted
 
 - Both files must have the **same number of rows**
 - Rows are matched by **index** (first row in data matches first row in labels)
-- Labels file must contain `error_type` (or `error_types`, `gt_error_type`, `label`)
+- Labels file must contain `error_type` (or `error_types`, `gt_error_type`, `label`, `is_error`)
 - Empty/blank cells in error_type column = no error (clean event)
 - Non-empty cells = error present with specified type(s)
 
@@ -158,7 +157,7 @@ polluted
 - **Automatic detection**: The tool automatically detects which option applies to your dataset
 - **Error type is the label**: Unlike binary classification, the error_type column directly contains the error category (not True/False)
 - **Empty means clean**: Blank or empty error_type cells indicate clean events (no errors)
-- **Column name flexibility**: Error type columns are auto-detected if named `error_type`, `error_types`, `gt_error_type`, or `label`
+- **Column name flexibility**: Error type columns are auto-detected if named `error_type`, `error_types`, `gt_error_type`, `label`, or `is_error`
 - **Multiple error types**: Use pipe-separated format (e.g., `form-based|polluted`)
 
 ### Complete Examples
@@ -377,11 +376,15 @@ Generate Python code that implements this error detection logic.
 
 ### Using the Prompt File
 
-Save your prompt in the `prompt/` directory and reference it:
+The script automatically looks for a prompt file at `prompt/vanilla_examples_instructions.txt`. If this file doesn't exist, it uses a built-in default prompt.
 
-```bash
-python main.py --prompt-file prompt/my_custom_prompt.txt
-```
+To customize the prompt:
+
+1. Create the `prompt/` directory in your project root
+2. Create a file named `vanilla_examples_instructions.txt`
+3. Write your custom prompt following the structure above
+
+The script will automatically use your custom prompt on the next run.
 
 ### Prompt Variants: Vanilla Examples vs Vanilla Examples Instructions
 
@@ -550,7 +553,7 @@ When your dataset includes a ground truth column (`label`, `is_error`, etc.), th
 ```json
 {
   "model": "gpt-5.2",
-  "temperature": 0.3,
+  "temperature": 0.1,
   "dataset": "my_dataset",
   "task_type": "error_detection",
   "success": true,
@@ -618,7 +621,7 @@ When no ground truth column is present, the JSON includes only detection statist
 ```json
 {
   "model": "gpt-5.2",
-  "temperature": 0.3,
+  "temperature": 0.1,
   "dataset": "unlabeled_dataset",
   "task_type": "error_detection",
   "success": true,
@@ -652,30 +655,38 @@ When no ground truth column is present, the JSON includes only detection statist
 
 ### STRICT
 
-Predicted error types must **exactly match** ground truth types.
+Predicted error types must **exactly match** ground truth types (all predicted types must match all ground truth types).
 
 **Example:**
 
 - GT: `form-based|polluted` → Pred: `form-based|polluted` ✓
 - GT: `form-based|polluted` → Pred: `form-based` ✗
+- GT: `form-based` → Pred: `form-based|polluted` ✗
 
 ### MODERATE
 
-Predicted error types must be a **subset** of ground truth types (all predicted must be correct, can miss some).
+Predicted error types must be a **subset** of ground truth types (all predicted must be correct, but can miss some GT types).
 
 **Example:**
 
-- GT: `form-based|polluted` → Pred: `form-based` ✓
-- GT: `form-based` → Pred: `form-based|polluted` ✗
+- GT: `form-based|polluted` → Pred: `form-based|polluted` ✓ (exact match is also a subset)
+- GT: `form-based|polluted` → Pred: `form-based` ✓ (subset - only predicted form-based, which exists in GT)
+- GT: `form-based|polluted` → Pred: `polluted` ✓ (subset - only predicted polluted, which exists in GT)
+- GT: `form-based` → Pred: `form-based|polluted` ✗ (NOT a subset - polluted not in GT)
+- GT: `form-based|polluted` → Pred: `synonym` ✗ (NOT a subset - synonym not in GT)
+
+**How it works:** All predicted error types must exist in the ground truth, but the model doesn't have to predict all GT types. This is more lenient than STRICT (which requires exact match) but stricter than GENEROUS (which only requires one overlap).
 
 ### GENEROUS
 
-At least **one predicted type** must match ground truth.
+At least **one predicted type** must match ground truth (any overlap counts as correct).
 
 **Example:**
 
 - GT: `form-based|polluted` → Pred: `form-based` ✓
+- GT: `form-based|polluted` → Pred: `polluted` ✓
 - GT: `form-based|polluted` → Pred: `synonym` ✗
+- GT: `form-based` → Pred: `form-based|polluted` ✓ (contains form-based)
 
 ## Metrics
 
@@ -686,21 +697,24 @@ At least **one predicted type** must match ground truth.
 
 Where:
 
-- **TP**: True Positives (correctly detected errors)
-- **FP**: False Positives (incorrectly flagged as errors)
+- **TP**: True Positives (correctly detected errors with matching types)
+- **FP**: False Positives (incorrectly flagged as errors, or wrong error types)
 - **TN**: True Negatives (correctly identified as non-errors)
-- **FN**: False Negatives (missed errors)
+- **FN**: False Negatives (missed errors, or detected but with wrong types)
 
 ## Error Types
 
 The system recognizes these error types:
 
-- `form-based`
+- `form-based` (also accepts: `form_based`, `formbased`, `autoformbased`)
 - `homonymous`
-- `synonym`
+- `synonymous`
 - `collateral`
 - `distorted`
 - `polluted`
+- `empty`
+
+**Note:** Error type names are normalized during evaluation (case-insensitive, underscores converted to hyphens).
 
 ## Examples
 
@@ -708,14 +722,13 @@ The system recognizes these error types:
 # Process all datasets with default settings
 python main.py
 
-# Use custom prompt
-python main.py --prompt-file prompt/my_prompt.txt
+# Use custom model via environment variable
+export OPENAI_MODEL=gpt-4-turbo
+python main.py
 
-# Use different model
-python main.py --model gpt-4-turbo
-
-# Custom temperature
-python main.py --temperature 0.5
+# Set custom API key
+export OPENAI_API_KEY='sk-your-api-key-here'
+python main.py
 ```
 
 ## Troubleshooting
@@ -742,4 +755,35 @@ Solution: Create `data/` directory and add CSV files
 Model 'gpt-x' does not exist
 ```
 
-Solution: Use valid model names (gpt-5.2, gpt-4-turbo, etc.)
+Solution: Use valid model names (gpt-5.2, gpt-4-turbo, etc.) via `OPENAI_MODEL` environment variable
+
+**Script Execution Failed:**
+
+The tool automatically retries LLM code generation up to 3 times if the generated script fails. Common issues:
+
+- **Pandas compatibility**: The tool automatically fixes deprecated parameters like `infer_datetime_format`
+- **Path issues**: Make sure the generated script uses `sys.argv[1]` and `sys.argv[2]` correctly
+- **Column names**: Ensure output has exactly `error_detected` and `detected_error_types` columns
+
+## Implementation Notes
+
+### Automatic Error Recovery
+
+The DetectorAgent includes automatic retry logic:
+
+1. First attempt: Uses original prompt
+2. Subsequent attempts (up to 3 total): Includes error feedback from previous attempt
+3. Automatic pandas compatibility fixes applied to all generated code
+
+### File Organization
+
+- **Data files**: Place in `data/` directory
+- **Label files**: If separate, use naming pattern `{dataset}_labels.csv`
+- **Excluded files**: Files ending with `_labels.csv`, `_label.csv`, `_gt.csv`, `_groundtruth.csv`, or `_withLabel.csv` are automatically excluded from processing
+- **Generated scripts**: Saved to `script/` directory
+- **Detection results**: Saved to `detected_output/` directory
+- **Evaluation results**: Saved to `results/` directory as JSON
+
+### Temperature Setting
+
+The tool uses a fixed temperature of `0.1` for LLM calls to ensure deterministic and consistent code generation. This is hardcoded in the script and cannot be changed via command-line arguments.

@@ -177,18 +177,83 @@ A single row can have multiple error types simultaneously.
 513,Revi ew application_X8Qm2_20240208 191921970000,2024-02-08 19:19:21.970,Manager-000003,POLLUTED + DISTORTED + FORMBASED(Review application | 2024-02-08 19:27:44.118)
 
 ---
-Output Requirements
-Output Format:
-
-The output CSV file must be saved to: {OUTPUT_CSV_PATH}
-Use this exact path - the directory structure will already be created for you. 
-The output filename must follow this pattern: {INPUT_DATASET_NAME}_detected.csv
-Example: If input is /path/to/data/credit_formbased_distorted.csv, output will be /path/to/data_detected/credit_formbased_distorted.detected.csv
 ## Output Requirements
 
-Generate a Python script that outputs a CSV with these columns:
-- `row_id`: Row identifier
-- `error_detected`: Boolean (True if any error detected)
-- `detected_error_types`: "form-based" or "synonym,collateral" or "" (empty if no error)
-- `error_confidence`: Confidence score (0.0-1.0)
-- `error_evidence`: Evidence supporting the detection
+CRITICAL - EXACT COLUMN NAMES REQUIRED:
+The output CSV MUST contain these EXACT column names (case-sensitive):
+1. error_detected (boolean: True/False)
+2. detected_error_types (string: pipe-separated error types or empty string)
+
+These are the ONLY two new columns required. The script must:
+- Keep ALL original columns from the input CSV
+- Add EXACTLY these two columns: error_detected and detected_error_types
+- Use these EXACT names - no variations like error_flag, error_types, etc.
+
+Output Format:
+The output CSV file must be saved to: {OUTPUT_CSV_PATH}
+Use this exact path - the directory structure will already be created for you
+The output filename must follow this pattern: {INPUT_DATASET_NAME}_detected.csv
+Example: If input is /path/to/data/credit_formbased_distorted.csv, output will be /path/to/data_detected/credit_formbased_distorted_detected.csv
+
+Column Specifications:
+1. error_detected: Boolean value (True if ANY error detected, False if clean)
+   - Python type: bool
+   - Values: True or False (not strings, not 1/0)
+
+2. detected_error_types: String with pipe-separated error types
+   - Python type: str
+   - Format for single error: "form-based" or "polluted" or "distorted" etc.
+   - Format for multiple errors: "form-based|polluted" or "distorted|synonymous" etc.
+   - Format for no errors: "" (empty string)
+   - Use lowercase with hyphens: form-based, not FORM-BASED or form_based
+   - Valid error types: form-based, polluted, distorted, synonymous, collateral, homonymous
+Additional Instructions:
+Initialize all rows as clean (error_detected=False, detected_error_types="")
+Detect each error type independently
+Combine results for rows with multiple errors using pipe separator
+Never use the label column (if present) for detection
+Provide all original columns plus the two required new columns
+
+Example Output Structure:
+Case,Activity,Timestamp,Resource,error_detected,detected_error_types
+1,Submit Application,2024-01-01 10:00:00,Clerk-001,False,
+2,Submitt Application,2024-01-01 11:00:00,Clerk-002,True,distorted
+3,Process Payment_X7Q2,2024-01-01 12:00:00,System-001,True,polluted
+4,Review App,2024-01-01 13:00:00,Manager-003,True,distorted|synonymous
+
+Detection Philosophy
+All rows start CLEAN. Errors are accumulated independently.
+Initial state:
+df['error_detected'] = False
+df['detected_error_types'] = ''
+
+FORBIDDEN INFERENCES:
+Do NOT infer synonymy from timestamps
+Do NOT infer synonymy from pollution
+Do NOT infer distortion from rarity
+Do NOT infer homonymy from semantic similarity
+Do NOT merge error types
+Each error must be detected, justified, and reported independently.
+
+Script Requirements
+Generate a single, runnable Python script that:
+1. Imports required libraries: sys, pandas (at minimum)
+2. Reads the input CSV using: df = pd.read_csv(sys.argv[1])
+3. Implements detection logic for all error types
+4. Checks each error type independently
+5. Combines multiple errors when present
+6. Creates EXACTLY two new columns with EXACT names: error_detected and detected_error_types
+7. Saves output using: df.to_csv(sys.argv[2], index=False)
+8. Handles edge cases gracefully
+9. Uses sys.argv[1] for input path and sys.argv[2] for output path
+10. Does NOT hardcode any file paths
+11. Can be executed as: python script.py input.csv output.csv
+
+CRITICAL REMINDERS:
+- Column names MUST be: error_detected and detected_error_types (not error_flag, error_types, etc.)
+- error_detected must be boolean (True/False), not string
+- detected_error_types must be pipe-separated string (e.g., "form-based|polluted")
+- Use sys.argv[1] and sys.argv[2] for file paths
+- Do NOT hardcode paths
+
+Return ONLY the Python script wrapped in ```python``` code markers. No explanations outside the code block.
