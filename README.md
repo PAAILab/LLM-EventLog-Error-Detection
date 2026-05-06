@@ -1,10 +1,10 @@
-# LLM Event Log Error Detection Framework
+# LLM Event Log Imperfection Pattern Detection Framework
 
 A Python tool for automated error detection in event log datasets using GPT models. Processes CSV datasets, generates detection code using LLMs, and computes evaluation metrics.
 
 ## Features
 
-- LLM-powered error detection code generation
+- LLM-powered imperfection patern detection
 - Automated metrics computation (precision, recall, F1-score, accuracy)
 - Three evaluation styles: STRICT, MODERATE, GENEROUS
 - Batch processing of multiple datasets
@@ -155,14 +155,14 @@ polluted
 ### Important Notes
 
 - **Automatic detection**: The tool automatically detects which option applies to your dataset
-- **Error type is the label**: Unlike binary classification, the error_type column directly contains the error category (not True/False)
+- **Imperfection pattern is the label**: Unlike binary classification, the error_type column directly contains the error category (not True/False)
 - **Empty means clean**: Blank or empty error_type cells indicate clean events (no errors)
 - **Column name flexibility**: Error type columns are auto-detected if named `error_type`, `error_types`, `gt_error_type`, `label`, or `is_error`
 - **Multiple error types**: Use pipe-separated format (e.g., `form-based|polluted`)
 
 ### Complete Examples
 
-**Option 1 - Error Types in Same File**:
+**Option 1 - Multiple Imperfection patterns in Same File**:
 
 ```csv
 case_id,activity,timestamp,resource,error_type
@@ -443,7 +443,7 @@ OUTPUT: CSV with error_detected and detected_error_types columns
 **Content**:
 
 - Task description
-- Error type definitions
+- Imperfection pattern description
 - **Detailed detection instructions** (how to detect each type)
 - Concrete examples
 - Detection criteria and thresholds
@@ -460,9 +460,9 @@ OUTPUT: CSV with error_detected and detected_error_types columns
 **Example structure**:
 
 ```
-TASK: Detect errors in event logs
+TASK: Detect imperfection patterns in event logs
 
-ERROR TYPES:
+Imperfection patterns:
 1. Form-based: Multiple events with same timestamp
 
    DETECTION INSTRUCTIONS:
