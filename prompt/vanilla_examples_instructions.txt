@@ -1,20 +1,27 @@
-## Task
+Persona 
+You are an expert in Process Mining and Data Quality Analysis with deep experience in detecting imperfection patterns. 
+You are intimately familir with the establised classification of event log imperfection patterns and their specific pattern types like 
+Formbased, Polluted, Distorted, Synonymous, Collateral, Homonymous. 
+Your task is to write precise, robust, and well-structured Python code. You approach each imperfection pattern independently, apply 
+appropriate detection techniques, and always prioritize correctness and reproducibility in your output.
+
+Task
 Generate a Python script that detects erroneous rows in a process mining event log CSV file.
 
-**Input CSV**: `{INPUT_CSV_PATH}`
+Input CSV: `{INPUT_CSV_PATH}`
 
-## Dataset Format
+Dataset Format
 The input CSV contains these columns:
-- **Case**: Case identifier
-- **Activity**: Activity name/label
-- **Timestamp**: When the activity occurred
-- **Resource**: Resource that performed the activity
-**Note**: Do NOT use any other columns for detection. Detect errors based only on the activity text, timestamps, cases, and resources.
+- Case: Case identifier
+- Activity: Activity name/label
+- Timestamp: When the activity occurred
+- Resource: Resource that performed the activity
+Note: Do NOT use any other columns for detection. Detect errors based only on the activity text, timestamps, cases, and resources.
 ---
 
-## Error Types to Detect
+Error Types to Detect
 
-### Instructions for examples
+Instructions for examples
 In the following Examples, each event is represented using the structure:
 ``` case_id, activity, timestamp, resource, error_annotation ```
 - If the error_annotation field is empty, the event is clean and the recorded activity label is assumed to be correct.
@@ -45,31 +52,41 @@ Examples:
 
 
 2. Polluted Errors
-Definition: Activities contain machine-generated suffixes (5-12 alphanumeric characters) appended to valid activity labels.
+Definition:  Activities contain machine-generated suffixes or prefixes appended to valid activity labels, introduced by automated systems or logging tools.
 
 Instructions:
-Identify activities ending with underscore-separated suffix patterns
-Suffix structure: _[alphanumeric_token]_[timestamp_fragment]
-The alphanumeric token is typically 5-12 characters
-The timestamp fragment may contain spaces, underscores, or be formatted as date-time components
-Extract the base activity label by removing the suffix
-Pollution is a mechanical corruption and does not change semantic meaning
+Identify activities that contain a valid base label combined with an additional token that appears machine-generated rather than human-written
+The extra token may appear before or after the base label, and may be attached using any special character (e.g. underscore, dash, dot, slash)
+The extra token may be of arbitrary length and may contain alphanumeric characters, timestamp fragments, or other system-generated patterns
+Extract the base activity label by removing the machine-generated token
+Pollution is a mechanical corruption and does not change the semantic meaning of the base label
 Polluted activities can co-exist with other error types
 
 Examples:
-4,Request Info_47xiDPl_20230929 130852312000,2023-09-29 13:08:52.312,Manager-000003,POLLUTED(Request info)
-4,Request Info_K9pQ2Lm_20230929 131145981000,2023-09-29 13:11:45.981,Manager-000003,POLLUTED(Request info)
-4,Request Info_ZX81aPe_20230929 133002114000,2023-09-29 13:30:02.114,Manager-000003,POLLUTED(Request info)
-2730,Finish task_38OBdRC_20240308 061315554000,2024-03-08 06:13:15.554,Manager-000004,POLLUTED(Finish task)
-2730,Finish task_Qm91LsT_20240308 064422771000,2024-03-08 06:44:22.771,Manager-000004,POLLUTED(Finish task)
-2730,Finish task_A72ZpXe_20240308 071503119000,2024-03-08 07:15:03.119,Manager-000004,POLLUTED(Finish task)
-13,Cook Dinner_74lwMHm_20230929 212246639000,2023-09-29 21:22:46.639,Manager-000003,POLLUTED(Cook Dinner)
-13,Cook Dinner_BxA81Qe_20230929 214503882000,2023-09-29 21:45:03.882,Manager-000003,POLLUTED(Cook Dinner)
-13,Cook Dinner_P90LmTs_20230930 001115044000,2023-09-30 00:11:15.044,Manager-000003,POLLUTED(Cook Dinner)
-17,Call advisor_80nSeSg_20230929 180925830000,2023-09-29 18:09:25.830,Manager-000005,POLLUTED(Call advisor)
-17,Call advisor_LQ9ZxW2_20230929 183311402000,2023-09-29 18:33:11.402,Manager-000005,POLLUTED(Call advisor)
-17,Call advisor_M8eT2Ck_20230930 091144221000,2023-09-30 09:11:44.221,Manager-000005,POLLUTED(Call advisor)
-
+4,Receive request,2023-09-29 12:58:11.104,Clerk-000002,
+4,Request Info_47xiDPl_20230929 130852312000,2023-09-29 13:08:52.312,Manager-000003,POLLUTED(Request Info)
+4,Review request,2023-09-29 13:20:40.201,Manager-000003,
+4,Request Info-K9pQ2Lm-20230929T131145981,2023-09-29 13:11:45.981,Manager-000003,POLLUTED(Request Info)
+4,Request Info:ZX81aPe:133002114000,2023-09-29 13:30:02.114,Manager-000003,POLLUTED(Request Info)
+4,Close case,2023-09-29 13:42:18.005,System-000001,
+13,Start cooking,2023-09-29 21:10:03.228,Manager-000003,
+13,CookDinner74lwMHm20230929212246639,2023-09-29 21:22:46.639,Manager-000003,POLLUTED(Cook Dinner)
+13,Check ingredients,2023-09-29 21:33:18.401,Manager-000003,
+13,[Cook Dinner][BxA81Qe][214503882],2023-09-29 21:45:03.882,Manager-000003,POLLUTED(Cook Dinner)
+13,Cook Dinner.P90LmTs.20230930_001115044,2023-09-30 00:11:15.044,Manager-000003,POLLUTED(Cook Dinner)
+13,Serve meal,2023-09-30 00:24:51.017,Manager-000004,
+17,Open consultation,2023-09-29 17:55:14.662,Manager-000005,
+17,Call advisor (80nSeSg) 20230929-180925,2023-09-29 18:09:25.830,Manager-000005,POLLUTED(Call advisor)
+17,Document outcome,2023-09-29 18:21:02.903,Manager-000005,
+17,Call advisor|LQ9ZxW2|183311402,2023-09-29 18:33:11.402,Manager-000005,POLLUTED(Call advisor)
+17,Call advisor#M8eT2Ck#091144221,2023-09-30 09:11:44.221,Manager-000005,POLLUTED(Call advisor)
+17,Close consultation,2023-09-30 09:25:40.118,Manager-000005,
+25,Approve request,2023-10-01 10:05:11.552,Manager-000001,
+25,Manager000001_Approve request,2023-10-01 10:05:15.031,Manager-000001,POLLUTED(Approve request)
+25,Notify applicant,2023-10-01 10:18:42.774,System-000001,
+31,Update record,2023-10-01 11:03:09.117,System-000001,
+31,20241001UpdateRecordX91,2023-10-01 11:05:26.008,System-000001,POLLUTED(Update record)
+31,Archive record,2023-10-01 11:16:44.662,System-000001,
 
 3. Distorted Errors
 Definition: Activities contain typos, character swaps, or spelling errors in the base label text.
@@ -82,115 +99,136 @@ Distortion is about spelling corruption, not semantic variation
 Do not classify semantic synonyms as distorted
 Confidence should reflect the severity and clarity of the distortion
 
-Examples:
-4,Appr ove request,2023-09-29 13:08:52.312,Manager-000003,DISTORTED(Approve request)
-3,Apprve request,2023-09-29 11:39:44.558,Manager-000003,DISTORTED(Approve request)
-13,Revi ew application,2023-09-29 21:22:46.639,Manager-000003,DISTORTED(Review application)
-18,Review applicatlon,2023-09-30 08:55:14.221,Manager-000004,DISTORTED(Review application)
-22,Review applicFation,2023-10-01 14:03:09.877,Manager-000005,DISTORTED(Review application)
-8,Send noti fication,2023-10-01 09:14:11.902,Clerk-000002,DISTORTED(Send notification)
-27,Send notlfication,2023-10-02 17:21:03.554,Clerk-000004,DISTORTED(Send notification)
-6,Updat record,2023-09-30 10:02:33.117,System-000001,DISTORTED(Update record)
-17,Update recoFrd,2023-09-30 10:02:33.117,System-000001,DISTORTED(Update record)
 
+Examples:
+4,Receive request,2023-09-29 12:58:11.104,Clerk-000002,
+4,Appr ove request,2023-09-29 13:08:52.312,Manager-000003,DISTORTED(Approve request)
+4,Notify applicant,2023-09-29 13:20:40.201,System-000001,
+7,Open patient file,2023-09-29 09:05:14.220,Nurse-000001,
+7,Record temprature,2023-09-29 09:12:48.511,Nurse-000001,DISTORTED(Record temperature)
+7,Call doctor,2023-09-29 09:18:03.995,Nurse-000002,
+11,Start production,2023-09-29 14:02:33.418,Machine-000003,
+11,Inspect componet,2023-09-29 14:11:07.204,Worker-000004,DISTORTED(Inspect component)
+11,Finish assembly,2023-09-29 14:36:52.880,Worker-000004,
+13,Take order,2023-09-29 21:05:10.002,Waiter-000002,
+13,Prepa re drinks,2023-09-29 21:22:46.639,Bartender-000001,DISTORTED(Prepare drinks)
+13,Bring drinks,2023-09-29 21:30:12.401,Waiter-000002,
+18,Register sample,2023-09-30 08:40:01.330,Lab-000001,
+18,Label speclmen,2023-09-30 08:55:14.221,Lab-000001,DISTORTED(Label specimen)
+18,Store sample,2023-09-30 09:07:48.510,Lab-000002,
+22,Open shipment,2023-10-01 13:50:33.772,System-000001,
+22,Load vehicie,2023-10-01 14:03:09.877,Worker-000005,DISTORTED(Load vehicle)
+22,Dispatch truck,2023-10-01 14:22:45.901,Worker-000005,
+27,Start consultation,2023-10-02 16:55:14.440,Doctor-000003,
+27,Prescribe medlcation,2023-10-02 17:21:03.554,Doctor-000003,DISTORTED(Prescribe medication)
+27,Schedule follow-up,2023-10-02 17:39:41.110,Clerk-000004,
+31,Receive package,2023-10-03 08:11:25.118,Worker-000002,
+31,Sort pacakge,2023-10-03 08:19:44.006,Worker-000002,DISTORTED(Sort package)
+31,Store package,2023-10-03 08:33:50.221,Worker-000003,
+35,Open case,2023-10-03 10:02:33.117,System-000001,
+35,Updat record,2023-10-03 10:08:54.771,System-000001,DISTORTED(Update record)
+35,Archive record,2023-10-03 10:21:16.200,System-000001,
 
 4. Synonymous Errors
-Definition: Different words representing the same logical business activity.
+Definition: Two or more distinct activity label strings exist in the log that refer to the same canonical business action. Synonymy is detectable from the label text alone — the labels are near-paraphrases of each other (e.g. "assess application" and "review application" are both present in the log and mean the same thing).
 
 Instructions:
-Identify activities that express the same business meaning using different vocabulary
-First, determine canonical activity forms based on frequency and consistency
-Normalize activities for comparison: remove pollution, standardize casing, tokenize
-Check semantic equivalence using these criteria:
-Different text: After normalization, text must differ from canonical form
-Verb equivalence: Action verbs must have the same meaning (e.g., request/ask, create/make)
-Noun equivalence: Objects must be equivalent (e.g., information/data, procedure/function)
-Same business context: Both activities serve the same business purpose
-Frequency asymmetry: Canonical form appears significantly more often
-Synonymy is about meaning, not spelling or mechanical corruption
-Do not confuse with distortion (spelling errors) or pollution (mechanical suffixes)
-An activity can only be synonymous with one canonical form
+Identify groups of activity labels that are semantically equivalent or near-paraphrases of each other  
+Perform detection globally across the dataset, not only within individual cases  
+Before comparison, remove any machine-generated additions or polluted fragments from the activity label  
+Use a sentence-transformer model (for example, "all-MiniLM-L6-v2") to embed activity labels and compare them using a distance measure such as cosine similarity  
+Encode all unique cleaned activity labels  
+Compute pairwise similarity between labels and identify highly similar pairs as synonym candidates  
+Group labels that appear to express the same underlying action  
+Within each group, determine a representative (canonical) label, for example the most frequent or most standard form  
+Mark all non-canonical variants in the group as synonymous errors  
+Do not mark the canonical representative itself  
+Do not mark labels that do not have sufficiently similar alternatives   
+Be conservative: only flag labels when semantic similarity is strong and unambiguous  
+Do not classify labels as synonymous if similarity is due only to character-level corruption (these should be treated as distorted instead)  
+Do not confuse synonymous with homonymous (same label, different meanings) 
 
 Examples:
+3,Submit application,2023-09-29 09:12:11.204,Applicant-000001,
 3,review case,2023-09-29 11:39:44.558,Manager-000003,SYNONYMOUS(Review application)
-3,assess application,2023-09-29 11:39:44.558,Manager-000003,SYNONYMOUS(Review application)
-3,evaluate application,2023-09-29 11:39:44.558,Manager-000003,SYNONYMOUS(Review application)
-3,inspect application,2023-09-29 11:39:44.558,Manager-000003,SYNONYMOUS(Review application)
-3,reject application,2023-09-29 11:39:44.558,Manager-000003,SYNONYMOUS(Reject request)
-3,deny request,2023-09-29 11:39:44.558,Manager-000003,SYNONYMOUS(Reject request)
-3,decline application,2023-09-29 11:39:44.558,Manager-000003,SYNONYMOUS(Reject request)
-3,refuse request,2023-09-29 11:39:44.558,Manager-000003,SYNONYMOUS(Reject request)
-3,make diagnosis,2023-09-29 11:39:44.558,Doctor-000001,SYNONYMOUS(Diagnose patient)
-3,establish diagnosis,2023-09-29 11:39:44.558,Doctor-000001,SYNONYMOUS(Diagnose patient)
-3,determine diagnosis,2023-09-29 11:39:44.558,Doctor-000001,SYNONYMOUS(Diagnose patient)
-3,confirm diagnosis,2023-09-29 11:39:44.558,Doctor-000001,SYNONYMOUS(Diagnose patient)
-3,start manufacturing,2023-09-29 11:39:44.558,Machine-000007,SYNONYMOUS(Start production)
-3,begin production,2023-09-29 11:39:44.558,Machine-000007,SYNONYMOUS(Start production)
-3,initiate production run,2023-09-29 11:39:44.558,Machine-000007,SYNONYMOUS(Start production)
-3,launch production,2023-09-29 11:39:44.558,Machine-000007,SYNONYMOUS(Start production)
-
+3,Notify applicant,2023-09-29 12:05:18.771,System-000001,
+7,Receive request,2023-09-29 10:01:03.441,Clerk-000002,
+7,assess application,2023-09-29 10:18:22.903,Manager-000004,SYNONYMOUS(Review application)
+7,Approve request,2023-09-29 10:42:55.210,Manager-000004,
+11,Receive request,2023-09-29 13:14:09.115,Clerk-000001,
+11,evaluate application,2023-09-29 13:30:41.662,Manager-000005,SYNONYMOUS(Review application)
+11,Reject request,2023-09-29 13:49:02.004,Manager-000005,
+15,Open case,2023-09-30 08:11:54.201,System-000001,
+15,inspect application,2023-09-30 08:24:17.488,Manager-000002,SYNONYMOUS(Review application)
+15,Close case,2023-09-30 08:40:33.910,System-000001,
+22,Register patient,2023-09-30 09:02:44.110,Nurse-000003,
+22,make diagnosis,2023-09-30 09:18:21.305,Doctor-000001,SYNONYMOUS(Diagnose patient)
+22,Prescribe treatment,2023-09-30 09:31:06.550,Doctor-000001,
+24,Register patient,2023-09-30 10:07:18.421,Nurse-000002,
+24,establish diagnosis,2023-09-30 10:26:45.993,Doctor-000002,SYNONYMOUS(Diagnose patient)
+24,Schedule follow-up,2023-09-30 10:44:12.776,Clerk-000003,
+31,Start order,2023-10-01 07:55:02.015,System-000001,
+31,start manufacturing,2023-10-01 08:10:33.772,Machine-000007,SYNONYMOUS(Start production)
+31,Finish production,2023-10-01 10:42:14.008,Machine-000007,
+35,Start order,2023-10-01 09:03:41.228,System-000001,
+35,begin production,2023-10-01 09:19:52.446,Machine-000008,SYNONYMOUS(Start production)
+35,Ship order,2023-10-01 12:11:39.664,Logistics-000002,
+41,Receive request,2023-10-01 14:12:06.337,Clerk-000002,
+41,Review application,2023-10-01 14:28:50.991,Manager-000003,
+41,Notify applicant,2023-10-01 14:44:18.205,System-000001,
 
 5. Collateral Errors
 Definition: Duplicate events caused by logging artifacts, where the same activity instance is recorded multiple times without advancing the case state. This includes exact duplicates (same case, activity, and timestamp) and near-duplicates that occur within an implausibly short interval and share identical contextual attributes.
 
 Instructions:
-Analyze repetition patterns within each case
-Identify suspicious patterns:
-Exact duplicates: Same activity, same timestamp
-Burst clusters: Same activity appearing 3+ times in short time window
-Immediate succession: Same activity appearing back-to-back with minimal time gap
-Apply conservative filtering to avoid flagging legitimate repetition:
-Require minimum 2-3 occurrences
-Consider activity type (some activities naturally repeat)
-Check for intervening activities (consecutive repetitions more suspicious)
-Weight confidence based on time gaps and repetition density
-Higher confidence for: consecutive occurrences, very short time gaps, activities that shouldn't logically repeat
-Lower confidence for: longer time gaps, activities that commonly repeat, many intervening activities
+Go through the event log and within each case find all groups of events that share similar activity label (not exactly same) and the same resource. 
+If the similar activity labels performed by the same resource appears 2 or more times within a time window of 5 seconds — or with identical timestamps — flag all occurrences as collateral errors.  
+The more occurrences within the window, the higher the confidence.
 
 Examples:
+14,Receive order,2023-10-01 14:20:05.120,Clerk-000001,
 14,Process payment,2023-10-01 14:22:10.451,System-000002,COLLATERAL(Process payment)
 14,Process payment,2023-10-01 14:22:11.982,System-000002,COLLATERAL(Process payment)
 14,Process payment,2023-10-01 14:22:13.104,System-000002,COLLATERAL(Process payment)
+14,Send confirmation,2023-10-01 14:25:44.001,System-000002,
+21,Pick items,2023-10-02 08:39:10.225,Logistics-000003,
 21,Ship order,2023-10-02 08:41:32.776,Logistics-000003,COLLATERAL(Ship order)
 21,Ship order,2023-10-02 08:41:34.019,Logistics-000003,COLLATERAL(Ship order)
+21,Close shipment,2023-10-02 08:45:02.887,Logistics-000004,
+33,Register patient,2023-09-30 06:50:10.004,Nurse-000002,
 33,Record vital signs,2023-09-30 06:55:44.208,Nurse-000004,COLLATERAL(Record vital signs)
 33,Record vital signs,2023-09-30 06:55:46.931,Nurse-000004,COLLATERAL(Record vital signs)
-5,Start production,2023-10-01 07:00:00.000,Machine-000007,COLLATERAL(Start production)
-5,Start production,2023-10-01 07:00:01.417,Machine-000007,COLLATERAL(Start production)
-5,Start production,2023-10-01 07:00:02.903,Machine-000007,COLLATERAL(Start production)
-18,Conduct interview,2023-09-29 15:10:22.512,HR-000002,COLLATERAL(Conduct interview)
-18,Conduct interview,2023-09-29 15:10:25.088,HR-000002,COLLATERAL(Conduct interview)
-7,Submit application,2023-09-29 10:00:01.000,Applicant-000001,COLLATERAL(Submit application)
-7,Submit application,2023-09-29 10:00:01.000,Applicant-000001,COLLATERAL(Submit application)
-7,Submit application,2023-09-29 10:00:01.000,Applicant-000001,COLLATERAL(Submit application)
-5,Start production,2023-10-01 07:00:00.000,Machine-000007,COLLATERAL(Start production)
-5,Start production,2023-10-01 07:00:00.000,Machine-000007,COLLATERAL(Start production)
+33,Notify doctor,2023-09-30 06:58:12.550,Nurse-000004,
+
 
 
 6. Homonymous Errors
 Definition: The same activity label is used to represent different underlying business actions with different meanings. Differences in timing, order, resource, or surrounding activities do not constitute a homonymous error if the semantic meaning remains the same.
 
 Instructions:
-Identify activities with identical labels that represent fundamentally different business meanings
-Focus on semantic meaning, not contextual differences
-Timing, resource, or order variations alone do not indicate homonymous errors
-Look for cases where the same label is used for distinct business outcomes or intents
-This error type is challenging to detect programmatically and may require domain knowledge
-Use surrounding activity patterns and case outcomes to infer semantic differences
+Go through the event log and find all activity labels that appear more than once within the same case. 
+For each repeated label, examine the activity that immediately precedes each occurrence within the case. 
+If the immediately preceding activity is consistently different across occurrences — meaning the same label is reached via completely different paths — this is a signal that the label may carry different meanings in different contexts. 
+Additionally, if the same label appears exactly twice within the same case within a very short time window of under 10 seconds with no intervening activities, flag the second occurrence as homonymous since the same action cannot logically happen twice in such rapid succession. 
+Do not flag a label as homonymous simply because it appears in cases with different outcomes or different subsequent activities — only flag when the activity itself appears to describe a genuinely different action.
+When a repeated label could be either collateral or homonymous, prefer collateral if the occurrences are 3 or more, and prefer homonymous only if exactly 2 occurrences exist with clearly different preceding context.
 
 Examples:
-201,Submit application,2023-09-29 09:00:01.000,Applicant-000001,
-201,Review application,2023-09-29 09:30:12.441,Manager-000003,
-201,Make decision,2023-09-29 10:05:44.118,Manager-000003,
-201,Close case (successful),2023-09-29 10:12:45.221,Agent-000004,
-301,Submit application,2023-09-29 09:00:01.000,Applicant-000001,
-301,Review application,2023-09-29 09:30:12.441,Manager-000003,
-301,Request additional info,2023-09-29 10:05:44.118,Manager-000003,
-301,Wait for applicant response,2023-10-02 10:05:44.118,System-000001,
-301,Response deadline exceeded,2023-10-05 10:05:44.118,System-000001,
-301,Close case (successful),2023-10-05 10:05:45.002,System-000001,HOMONYMOUS(Close case (forced termination))
-
-Note: The same label "Close case (successful)" is used for two different business meanings (successful completion vs forced termination).
+201,Receive request,2023-09-30 10:00:00.000,Clerk-000002,
+201,Transfer document,2023-09-30 10:18:00.000,Staff-000002,HOMONYMOUS(Bring document),
+201,Review document,2023-09-30 10:33:00.000,Manager-000001,
+201,Transfer document,2023-09-30 10:47:00.000,Staff-000003,HOMONYMOUS(Take out document),
+201,Archive case,2023-09-30 11:05:00.000,Manager-000002,
+301,Open logistics case,2023-10-02 10:00:00.000,System-000001,
+301,Handle package,2023-10-02 10:14:00.000,Worker-000001,HOMONYMOUS(Receive package),
+301,Inspect package,2023-10-02 10:26:00.000,Worker-000002,
+301,Handle package,2023-10-02 10:41:00.000,Worker-000003,HOMONYMOUS(Send package),
+301,Close shipment,2023-10-02 10:55:00.000,System-000001,
+401,Start warehouse process,2023-10-03 08:00:00.000,System-000001,
+401,Move item,2023-10-03 08:12:00.000,Worker-000004,HOMONYMOUS(Store item),
+401,Check inventory,2023-10-03 08:28:00.000,Worker-000005,
+401,Move item,2023-10-03 08:46:00.000,Worker-000004,HOMONYMOUS(Remove item),
+401,Finish warehouse process,2023-10-03 09:02:00.000,System-000001,
 
 Multiple Errors
 CRITICAL: A single row can have multiple error types simultaneously. Error types operate on independent layers:
@@ -283,7 +321,7 @@ Each error must be detected, justified, and reported independently.
 
 Script Requirements
 Generate a single, runnable Python script that:
-1. Imports required libraries: sys, pandas (at minimum)
+1. Imports required libraries: sys, pandas, sentence_transformers (at minimum)
 2. Reads the input CSV using: df = pd.read_csv(sys.argv[1])
 3. Implements detection logic for all error types
 4. Checks each error type independently
@@ -303,3 +341,4 @@ CRITICAL REMINDERS:
 - Do NOT hardcode paths
 
 Return ONLY the Python script wrapped in ```python``` code markers. No explanations outside the code block.
+
