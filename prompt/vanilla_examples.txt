@@ -45,7 +45,11 @@ Examples:
 
 
 2. Polluted Errors
+<<<<<<< HEAD
 Definition:  Activities contain machine-generated suffixes or prefixes appended to valid activity labels, introduced by automated systems or logging tools.
+=======
+Definition: Activities contain machine-generated suffixes or prefixes appended to valid activity labels, introduced by automated systems or logging tools.
+>>>>>>> 720dd12 (upd data)
 
 Examples:
 4,Receive request,2023-09-29 12:58:11.104,Clerk-000002,
@@ -70,11 +74,18 @@ Examples:
 25,Manager000001_Approve request,2023-10-01 10:05:15.031,Manager-000001,POLLUTED(Approve request)
 25,Notify applicant,2023-10-01 10:18:42.774,System-000001,
 31,Update record,2023-10-01 11:03:09.117,System-000001,
+<<<<<<< HEAD
 31,20241001UpdateRecordX91,2023-10-01 11:05:26.008,System-000001,POLLUTED(Update record)
 31,Archive record,2023-10-01 11:16:44.662,System-000001,
 
 3. Distorted Errors
 Definition: Activities contain typos, character swaps, or spelling errors in the base label text.
+=======
+31,Archive record,2023-10-01 11:16:44.662,System-000001,
+
+3. Distorted Errors
+Definition: Activities contain typos, character swaps, missing characters, inserted characters, internal word splits, extra spaces, or spelling errors in the base label text.
+>>>>>>> 720dd12 (upd data)
 
 Examples:
 4,Receive request,2023-09-29 12:58:11.104,Clerk-000002,
@@ -138,25 +149,43 @@ Examples:
 41,Notify applicant,2023-10-01 14:44:18.205,System-000001,
 
 5. Collateral Errors
+<<<<<<< HEAD
 Definition: Duplicate events caused by logging artifacts, where the same activity instance is recorded multiple times without advancing the case state. This includes exact duplicates (same case, activity, and timestamp) and near-duplicates that occur within an implausibly short interval and share identical contextual attributes.
+=======
+Definition: Collateral errors are burst-like logging artifacts where multiple events are recorded almost simultaneously because of a logging/system issue. These events may represent duplicated or accidentally co-recorded events and do not necessarily need to have identical activity labels.
+>>>>>>> 720dd12 (upd data)
 
 Examples:
 14,Receive order,2023-10-01 14:20:05.120,Clerk-000001,
 14,Process payment,2023-10-01 14:22:10.451,System-000002,COLLATERAL(Process payment)
+<<<<<<< HEAD
 14,Process payment,2023-10-01 14:22:11.982,System-000002,COLLATERAL(Process payment)
 14,Process payment,2023-10-01 14:22:13.104,System-000002,COLLATERAL(Process payment)
 14,Send confirmation,2023-10-01 14:25:44.001,System-000002,
 21,Pick items,2023-10-02 08:39:10.225,Logistics-000003,
 21,Ship order,2023-10-02 08:41:32.776,Logistics-000003,COLLATERAL(Ship order)
+=======
+14,Validate payment,2023-10-01 14:22:11.982,System-000002,COLLATERAL(Validate payment)
+14,Confirm payment,2023-10-01 14:22:13.104,System-000002,COLLATERAL(Confirm payment)
+14,Send confirmation,2023-10-01 14:25:44.001,System-000002,
+21,Pick items,2023-10-02 08:39:10.225,Logistics-000003,
+21,Prepare shipment,2023-10-02 08:41:32.776,Logistics-000003,COLLATERAL(Prepare shipment)
+>>>>>>> 720dd12 (upd data)
 21,Ship order,2023-10-02 08:41:34.019,Logistics-000003,COLLATERAL(Ship order)
 21,Close shipment,2023-10-02 08:45:02.887,Logistics-000004,
 33,Register patient,2023-09-30 06:50:10.004,Nurse-000002,
 33,Record vital signs,2023-09-30 06:55:44.208,Nurse-000004,COLLATERAL(Record vital signs)
+<<<<<<< HEAD
 33,Record vital signs,2023-09-30 06:55:46.931,Nurse-000004,COLLATERAL(Record vital signs)
 33,Notify doctor,2023-09-30 06:58:12.550,Nurse-000004,
 
 
 
+=======
+33,Update patient chart,2023-09-30 06:55:46.931,Nurse-000004,COLLATERAL(Update patient chart)
+33,Notify doctor,2023-09-30 06:58:12.550,Nurse-000004,
+
+>>>>>>> 720dd12 (upd data)
 6. Homonymous Errors
 Definition: The same activity label is used to represent different underlying business actions with different meanings. Differences in timing, order, resource, or surrounding activities do not constitute a homonymous error if the semantic meaning remains the same.
 

@@ -1,0 +1,56 @@
+{
+  "model": "gpt-5.2",
+  "temperature": 0.1,
+  "dataset": "credit_seed27_ratio0.3_homonymous_noLabel",
+  "task_type": "error_detection",
+  "success": true,
+  "output_shape": [
+    53972,
+    6
+  ],
+  "metrics": {
+    "has_ground_truth": true,
+    "error_type_analysis": {
+      "total_errors_detected": 2242,
+      "homonymous": 2242
+    },
+    "total_events": 53972,
+    "errors_detected": 2242,
+    "STRICT": {
+      "precision": 0.703835860838537,
+      "recall": 0.5378323108384458,
+      "f1_score": 0.6097372488408037,
+      "accuracy": 0.9625731860964944,
+      "true_positives": 1578,
+      "false_positives": 664,
+      "true_negatives": 50374,
+      "false_negatives": 1356,
+      "evaluation_style": "STRICT"
+    },
+    "MODERATE": {
+      "precision": 0.703835860838537,
+      "recall": 0.5378323108384458,
+      "f1_score": 0.6097372488408037,
+      "accuracy": 0.9625731860964944,
+      "true_positives": 1578,
+      "false_positives": 664,
+      "true_negatives": 50374,
+      "false_negatives": 1356,
+      "evaluation_style": "MODERATE"
+    },
+    "GENEROUS": {
+      "precision": 0.703835860838537,
+      "recall": 0.5378323108384458,
+      "f1_score": 0.6097372488408037,
+      "accuracy": 0.9625731860964944,
+      "true_positives": 1578,
+      "false_positives": 664,
+      "true_negatives": 50374,
+      "false_negatives": 1356,
+      "evaluation_style": "GENEROUS"
+    },
+    "ground_truth_errors": 2934
+  },
+  "error": null,
+  "timestamp": "2026-05-11T12:04:09.603173+00:00"
+}

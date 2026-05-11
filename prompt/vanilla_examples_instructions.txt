@@ -52,6 +52,7 @@ Examples:
 
 
 2. Polluted Errors
+<<<<<<< HEAD
 Definition:  Activities contain machine-generated suffixes or prefixes appended to valid activity labels, introduced by automated systems or logging tools.
 
 Instructions:
@@ -61,6 +62,18 @@ The extra token may be of arbitrary length and may contain alphanumeric characte
 Extract the base activity label by removing the machine-generated token
 Pollution is a mechanical corruption and does not change the semantic meaning of the base label
 Polluted activities can co-exist with other error types
+=======
+Definition: Activities contain machine-generated suffixes or prefixes appended to valid activity labels, introduced by automated systems or logging tools.
+
+Instructions:
+Identify activities that contain a valid human-readable base label combined with an additional token that appears machine-generated rather than human-written
+The extra token may appear before or after the base label, and may be attached using special characters such as underscore, dash, dot, slash, colon, pipe, brackets, or parentheses
+The extra token may contain random alphanumeric IDs, timestamp fragments, long digit sequences, resource-like prefixes, or other system-generated patterns
+Extract the base activity label by removing only the machine-generated token while preserving the meaningful activity text
+Extract the likely base activity label whenever the machine-generated part can be separated or reasonably inferred from the log
+Do not classify a label as polluted only because it contains punctuation, capitalization differences, or short numbers that may be part of the normal activity name
+Pollution is a mechanical corruption and does not change the semantic meaning of the base label
+>>>>>>> 720dd12 (upd data)
 
 Examples:
 4,Receive request,2023-09-29 12:58:11.104,Clerk-000002,
@@ -85,21 +98,36 @@ Examples:
 25,Manager000001_Approve request,2023-10-01 10:05:15.031,Manager-000001,POLLUTED(Approve request)
 25,Notify applicant,2023-10-01 10:18:42.774,System-000001,
 31,Update record,2023-10-01 11:03:09.117,System-000001,
+<<<<<<< HEAD
 31,20241001UpdateRecordX91,2023-10-01 11:05:26.008,System-000001,POLLUTED(Update record)
+=======
+>>>>>>> 720dd12 (upd data)
 31,Archive record,2023-10-01 11:16:44.662,System-000001,
 
 3. Distorted Errors
-Definition: Activities contain typos, character swaps, or spelling errors in the base label text.
+Definition: Activities contain typos, character swaps, missing characters, inserted characters, internal word splits, extra spaces, or spelling errors in the base label text.
+
 
 Instructions:
-Apply distortion detection to the base activity label only (after removing any pollution suffix)
-Identify character-level corruption: typos, swapped characters, missing characters, extra spaces
-Use string similarity measures to compare against canonical forms
+Apply distortion detection to the base activity label only after removing any pollution suffix or prefix
+Never compare raw polluted activity strings for distortion
+Identify character-level corruption: typos, swapped characters, missing characters, inserted characters, internal word splits, extra spaces, and spelling errors
+Use character-level similarity such as Levenshtein/edit similarity or character n-gram similarity to compare labels against canonical forms
 Distortion is about spelling corruption, not semantic variation
-Do not classify semantic synonyms as distorted
-Confidence should reflect the severity and clarity of the distortion
+Do not classify semantic synonyms or paraphrases as distorted
+Do not classify labels as distorted only because they are rare
+Build canonical candidates from cleaned activity labels only
+Do not assume that a label is clean only because it appears frequently
+Do not use a fixed minimum number of canonical labels that may not fit the dataset
+Do not blindly expand the canonical pool to many frequent labels when the dataset naturally contains a small activity vocabulary
+Frequent distorted variants can still be distorted if they are very close to a more standard label
+Compare possible canonical labels to each other; if two labels are very close at character level, prefer the more frequent and more stable label as canonical and treat the less frequent close variant as a possible distortion
 
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 720dd12 (upd data)
 Examples:
 4,Receive request,2023-09-29 12:58:11.104,Clerk-000002,
 4,Appr ove request,2023-09-29 13:08:52.312,Manager-000003,DISTORTED(Approve request)
@@ -133,6 +161,7 @@ Examples:
 Definition: Two or more distinct activity label strings exist in the log that refer to the same canonical business action. Synonymy is detectable from the label text alone — the labels are near-paraphrases of each other (e.g. "assess application" and "review application" are both present in the log and mean the same thing).
 
 Instructions:
+<<<<<<< HEAD
 Identify groups of activity labels that are semantically equivalent or near-paraphrases of each other  
 Perform detection globally across the dataset, not only within individual cases  
 Before comparison, remove any machine-generated additions or polluted fragments from the activity label  
@@ -147,6 +176,18 @@ Do not mark labels that do not have sufficiently similar alternatives
 Be conservative: only flag labels when semantic similarity is strong and unambiguous  
 Do not classify labels as synonymous if similarity is due only to character-level corruption (these should be treated as distorted instead)  
 Do not confuse synonymous with homonymous (same label, different meanings) 
+=======
+Use sentence-transformers with model "all-MiniLM-L6-v2" to embed activity labels and detect synonyms via cosine similarity
+Strip any pollution suffix from each label before embedding — never embed the raw polluted string
+Encode all unique cleaned labels: model.encode(unique_labels, convert_to_tensor=True)
+Compute pairwise cosine similarity: sim_matrix = util.cos_sim(embeddings, embeddings)
+For each pair (i, j) where i != j, treat labels as synonyms if sim_matrix[i][j] >= 0.80
+Group synonym pairs into clusters using connected components or union-find
+Within each cluster, designate the most frequent label in the dataset as the canonical form
+Flag all rows whose cleaned label is a non-canonical cluster member as synonymous errors
+Do not flag labels that are the canonical form of their cluster
+Do not flag labels that belong to no cluster (cosine similarity below 0.80 with all others)
+>>>>>>> 720dd12 (upd data)
 
 Examples:
 3,Submit application,2023-09-29 09:12:11.204,Applicant-000001,
@@ -178,29 +219,53 @@ Examples:
 41,Notify applicant,2023-10-01 14:44:18.205,System-000001,
 
 5. Collateral Errors
-Definition: Duplicate events caused by logging artifacts, where the same activity instance is recorded multiple times without advancing the case state. This includes exact duplicates (same case, activity, and timestamp) and near-duplicates that occur within an implausibly short interval and share identical contextual attributes.
+Definition: Collateral errors are burst-like logging artifacts where multiple events are recorded almost simultaneously because of a logging/system issue. These events may represent duplicated or accidentally co-recorded events and do not necessarily need to have identical activity labels.
 
 Instructions:
+<<<<<<< HEAD
 Go through the event log and within each case find all groups of events that share similar activity label (not exactly same) and the same resource. 
 If the similar activity labels performed by the same resource appears 2 or more times within a time window of 5 seconds — or with identical timestamps — flag all occurrences as collateral errors.  
 The more occurrences within the window, the higher the confidence.
+=======
+Go through the event log and within each case find consecutive groups of events that occur within a very short time window
+Flag events as collateral if 2 or more consecutive events occur within 5 seconds, or have identical timestamps, and share strong contextual similarity such as the same resource
+Activity labels do not have to be identical for collateral errors
+Different activity labels can still be collateral if they appear as an implausibly close burst within the same case and resource context
+Do not require exact activity-label equality as a condition for collateral detection
+Do not flag repeated activities as collateral if there are normal time gaps between them
+Do not flag events if different unrelated activities occur between them, because this suggests normal process progression rather than a logging artifact
+The more events in the burst and the shorter the time gap, the higher the confidence
+>>>>>>> 720dd12 (upd data)
 
 Examples:
 14,Receive order,2023-10-01 14:20:05.120,Clerk-000001,
 14,Process payment,2023-10-01 14:22:10.451,System-000002,COLLATERAL(Process payment)
+<<<<<<< HEAD
 14,Process payment,2023-10-01 14:22:11.982,System-000002,COLLATERAL(Process payment)
 14,Process payment,2023-10-01 14:22:13.104,System-000002,COLLATERAL(Process payment)
 14,Send confirmation,2023-10-01 14:25:44.001,System-000002,
 21,Pick items,2023-10-02 08:39:10.225,Logistics-000003,
 21,Ship order,2023-10-02 08:41:32.776,Logistics-000003,COLLATERAL(Ship order)
+=======
+14,Validate payment,2023-10-01 14:22:11.982,System-000002,COLLATERAL(Validate payment)
+14,Confirm payment,2023-10-01 14:22:13.104,System-000002,COLLATERAL(Confirm payment)
+14,Send confirmation,2023-10-01 14:25:44.001,System-000002,
+21,Pick items,2023-10-02 08:39:10.225,Logistics-000003,
+21,Prepare shipment,2023-10-02 08:41:32.776,Logistics-000003,COLLATERAL(Prepare shipment)
+>>>>>>> 720dd12 (upd data)
 21,Ship order,2023-10-02 08:41:34.019,Logistics-000003,COLLATERAL(Ship order)
 21,Close shipment,2023-10-02 08:45:02.887,Logistics-000004,
 33,Register patient,2023-09-30 06:50:10.004,Nurse-000002,
 33,Record vital signs,2023-09-30 06:55:44.208,Nurse-000004,COLLATERAL(Record vital signs)
+<<<<<<< HEAD
 33,Record vital signs,2023-09-30 06:55:46.931,Nurse-000004,COLLATERAL(Record vital signs)
 33,Notify doctor,2023-09-30 06:58:12.550,Nurse-000004,
 
 
+=======
+33,Update patient chart,2023-09-30 06:55:46.931,Nurse-000004,COLLATERAL(Update patient chart)
+33,Notify doctor,2023-09-30 06:58:12.550,Nurse-000004,
+>>>>>>> 720dd12 (upd data)
 
 6. Homonymous Errors
 Definition: The same activity label is used to represent different underlying business actions with different meanings. Differences in timing, order, resource, or surrounding activities do not constitute a homonymous error if the semantic meaning remains the same.
@@ -209,7 +274,10 @@ Instructions:
 Go through the event log and find all activity labels that appear more than once within the same case. 
 For each repeated label, examine the activity that immediately precedes each occurrence within the case. 
 If the immediately preceding activity is consistently different across occurrences — meaning the same label is reached via completely different paths — this is a signal that the label may carry different meanings in different contexts. 
+<<<<<<< HEAD
 Additionally, if the same label appears exactly twice within the same case within a very short time window of under 10 seconds with no intervening activities, flag the second occurrence as homonymous since the same action cannot logically happen twice in such rapid succession. 
+=======
+>>>>>>> 720dd12 (upd data)
 Do not flag a label as homonymous simply because it appears in cases with different outcomes or different subsequent activities — only flag when the activity itself appears to describe a genuinely different action.
 When a repeated label could be either collateral or homonymous, prefer collateral if the occurrences are 3 or more, and prefer homonymous only if exactly 2 occurrences exist with clearly different preceding context.
 
@@ -238,6 +306,7 @@ Base-text quality: distorted (typos, character corruption)
 Semantic meaning: synonymous (different wording, same meaning)
 Duplication: collateral (logging artifacts)
 Identifier noise: homonymous (same label, different meanings)
+
 
 Instructions:
 Check each error type independently

@@ -1,0 +1,56 @@
+{
+  "model": "gpt-5.2",
+  "temperature": 0.1,
+  "dataset": "credit_seed27_ratio0.3_formbased_noLabel",
+  "task_type": "error_detection",
+  "success": true,
+  "output_shape": [
+    53972,
+    6
+  ],
+  "metrics": {
+    "has_ground_truth": true,
+    "error_type_analysis": {
+      "total_errors_detected": 4675,
+      "form-based": 4675
+    },
+    "total_events": 53972,
+    "errors_detected": 4675,
+    "STRICT": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "accuracy": 1.0,
+      "true_positives": 4675,
+      "false_positives": 0,
+      "true_negatives": 49297,
+      "false_negatives": 0,
+      "evaluation_style": "STRICT"
+    },
+    "MODERATE": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "accuracy": 1.0,
+      "true_positives": 4675,
+      "false_positives": 0,
+      "true_negatives": 49297,
+      "false_negatives": 0,
+      "evaluation_style": "MODERATE"
+    },
+    "GENEROUS": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "accuracy": 1.0,
+      "true_positives": 4675,
+      "false_positives": 0,
+      "true_negatives": 49297,
+      "false_negatives": 0,
+      "evaluation_style": "GENEROUS"
+    },
+    "ground_truth_errors": 4675
+  },
+  "error": null,
+  "timestamp": "2026-05-11T12:01:06.273550+00:00"
+}
